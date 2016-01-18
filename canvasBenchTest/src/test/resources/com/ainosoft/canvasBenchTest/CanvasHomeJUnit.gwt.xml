@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module rename-to="CanvasHome">
+  <!-- Inherit our applications main module.                      -->
+  <inherits name='com.ainosoft.canvasBenchTest.CanvasHome' />
+
+  <!-- Specify the path to any remote services.                   -->
+  <servlet path="/CanvasHome/greet" class="com.ainosoft.canvasBenchTest.server.GreetingServiceImpl" />
+
+</module>

@@ -1,0 +1,284 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Canvas Test</title>
+    <link rel="stylesheet" href="app.css" type="text/css" />
+    <script src="app.js"></script>
+    <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+    <script src="//cdn.jsdelivr.net/interact.js/1.2.6/interact.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.5.0/fabric.min.js"></script>
+    <script type="text/javascript" src="/script/canvas2svg.js"></script>
+
+</head>
+<body>
+    <div class="section" id="div1">
+        <h1>Canvas Test</h1>
+        <div>
+            <input type="button" onclick="execute()" value="Execute" style="background-color: #29e; width: 150px;" />
+            <b><span id="renderingTime"></span></b>
+        </div>
+        <div>
+            <span>
+                Number Of Elements:    <span>
+                    <input type="number" value="1000" id="numberOfElements" />
+                </span>
+            </span>
+        </div>
+        <div>
+            <span>
+                Resize Canvas:  <span>
+                    <input type="radio" name="resize" value="onMove" id="resizeOnMove" checked />On Mouse Move<input type="radio" name="resize" id="resizeOnEnd" value="onEnd" />On Mouse up
+                </span>
+            </span>
+            <b><span id="resizingTime"></span></b>
+        </div>
+        <div>
+            <span id="clickingText"></span>
+            <br />
+            <br />
+        </div>
+
+        <div class="resize-container">
+            <div class="resize-drag">
+                <canvas id="myCanvas"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="section" id="div2">
+        <h1>Canvas with d3 Test</h1>
+        <div>
+            <input type="button" onclick="executeD3()" value="Execute" style="background-color: #29e; width: 150px;" />
+            <b><span id="renderingTime-d3"></span></b>
+        </div>
+        <div>
+            <span>
+                Number Of Elements:    <span>
+                    <input type="number" value="1000" id="numberOfElements-d3" />
+                </span>
+            </span>
+        </div>
+        <div>
+            <span>
+                Resize Canvas:  <span>
+                    <input type="radio" name="resize-d3" value="onMove" id="resizeOnMove-d3" checked />On Mouse Move<input type="radio" name="resize-d3" id="Radio1" value="onEnd" />On Mouse up
+                </span>
+            </span>
+            <b><span id="resizingTime-d3"></span></b>
+        </div>
+        <div>
+            <span id="clickingText-d3"></span>
+            <br />
+            <br />
+        </div>
+
+        <div class="resize-container">
+            <div class="resize-drag-d3">
+                <div id="vis"></div>
+            </div>
+        </div>
+
+    </div>
+    <div class="section" id="div3">
+        <h1>Svg with d3 Test</h1>
+        <div>
+            <input type="button" onclick="executeSvg()" value="Execute" style="background-color: #29e; width: 150px;" />
+            <b><span id="renderingTime-svg"></span></b>
+        </div>
+        <div>
+            <span>
+                Number Of Elements:    <span>
+                    <input type="number" value="1000" id="numberOfElements-svg" />
+                </span>
+            </span>
+        </div>
+        <div>
+            <span>
+                Resize Canvas:  <span>
+                    <input type="radio" name="resize-svg" value="onMove" id="resizeOnMove-svg" checked />On Mouse Move<input type="radio" name="resize-svg" id="Radio3" value="onEnd" />On Mouse up
+                </span>
+            </span>
+            <b><span id="resizingTime-svg"></span></b>
+        </div>
+        <div>
+            <span id="clickingText-svg"></span>
+            <br />
+            <br />
+        </div>
+
+        <div class="resize-container">
+            <div class="resize-drag-svg">
+                <div id="vis-svg"></div>
+            </div>
+        </div>
+
+    </div>
+    <script type="text/javascript">
+        var app = new App.myApp();
+        var numOfElements = document.getElementById('numberOfElements').value;
+        var visual = app.createBasicVisual('myCanvas', numOfElements);
+
+        function resizeCanvas() {
+            visual.setSize();
+            visual.draw();
+        }
+
+        function execute() {
+            visual.numberOfElements = document.getElementById('numberOfElements').value;
+            visual.clear();
+            visual.setData();
+            var renderStart = new Date().getTime();
+            visual.draw();
+            var elapsed = new Date().getTime() - renderStart;
+            var clickingText = document.getElementById("renderingTime");
+            clickingText.innerText = '         Rendered in ' + elapsed / 1000 + 's';
+        }
+
+        app.setResizeAbility(interact, resizeCanvas, '.resize-drag', document.getElementById('resizingTime'), document.getElementById('resizeOnMove'));
+        app.setResizeAbility(interact, resizeCanvasD3, '.resize-drag-d3', document.getElementById('resizingTime-d3'), document.getElementById('resizeOnMove-d3'));
+        app.setResizeAbility(interact, resizeCanvasSvg, '.resize-drag-svg', document.getElementById('resizingTime-svg'), document.getElementById('resizeOnMove-svg'));
+
+
+        // -----------------------------------------   d3    ------------------------------------------------//
+
+        var canvasElement = d3.select("#vis");
+        var container = document.getElementById("vis");
+        var svgContainer = document.getElementById("vis-svg");
+        var width = container.parentElement.clientWidth - 20;
+        var height = container.parentElement.clientHeight - 20;
+        var svgWidth = width;
+        var svgHeight = height;
+
+        var chart = canvasElement.append("canvas")
+            .attr("width", width)
+            .attr("height", height);
+        var context = chart.node().getContext("2d");
+
+        // virtual container for our circles
+        var inMem = document.createElement("customCircle");
+        var circleContainer = d3.select(inMem);
+
+        var svgData = getSvgData();
+        var d3Data = getData();
+
+        makeCircles(d3Data, circleContainer);
+        drawCircles(chart, circleContainer);
+
+        drawSvg(width, height);
+
+        function executeD3() {
+            context.clearRect(0, 0, width, height);
+            circleContainer.selectAll("*").remove();
+
+            d3Data = getData();
+            var renderStart = new Date().getTime();
+            makeCircles(d3Data, circleContainer);
+            drawCircles(chart, circleContainer);
+
+            var elapsed = new Date().getTime() - renderStart;
+            var clickingText = document.getElementById("renderingTime-d3");
+            clickingText.innerText = '         Rendered in ' + elapsed / 1000 + 's';
+        }
+
+        function resizeCanvasD3() {
+            width = container.parentElement.clientWidth - 20;
+            height = container.parentElement.clientHeight - 20;
+            chart.attr("width", width)
+            .attr("height", height);
+            context.clearRect(0, 0, width, height);
+            drawCircles(chart, circleContainer);
+        }
+
+        function getData() {
+            var numberOfElementsD3 = document.getElementById('numberOfElements-d3').value;
+            var result = [];
+            for (var i = 0; i < numberOfElementsD3; i++) {
+                result.push({ x: (Math.random()), y: (Math.random()), z: 5 });
+            }
+            return result;
+        }
+
+        function getSvgData() {
+            var numberOfElementsSvg = document.getElementById('numberOfElements-svg').value;
+            var result = [];
+            for (var i = 0; i < numberOfElementsSvg; i++) {
+                result.push({ x: (Math.random()), y: (Math.random()), z: 5 });
+            }
+            return result;
+        }
+
+        function makeCircles(data, circleContainer) {
+            var databind = circleContainer.selectAll("customCircle.circle").data(data);
+            databind.enter()
+                .append("customCircle")
+                .classed("circle", true)
+                .attr("x", function (d) { return d.x; })
+                .attr("y", function (d) { return d.y; })
+                .attr("size", function (d) { return d.z; });
+        }
+
+        function drawCircles(element, dataContainer) {
+            console.log(dataContainer);
+            var graphicsContext = element.node().getContext("2d");
+            var elements = dataContainer.selectAll(".circle");
+            elements.each(function (d) {
+                var node = d3.select(this);
+                graphicsContext.beginPath();
+                graphicsContext.fillStyle = "green";
+                graphicsContext.arc(node.attr("x") * width, node.attr("y") * height, node.attr("size"), 0, (2 * Math.PI));
+                graphicsContext.fill();
+                graphicsContext.strokeStyle = '#003300';
+                graphicsContext.lineWidth = 2;
+                graphicsContext.stroke();
+                graphicsContext.closePath();
+            });
+        }
+
+        // -----------------------------------------   d3    ------------------------------------------------//
+
+        function drawSvg() {
+            var svg = d3.select("#vis-svg")
+                    .append("svg")
+                    .attr("width", svgWidth)
+                    .attr("height", svgHeight);
+
+            var elemEnter = svg.selectAll("g")
+                .data(svgData)
+                .enter()
+                .append("g");
+
+            elemEnter.append("circle")
+                .style("stroke", "black")
+                .style("fill", "green")
+                .attr("r", 5)
+                .attr("cx", (d) => { return d.x * svgWidth })
+                .attr("cy", (d) => { return d.y * svgHeight })
+        }
+
+        function clearSvg() {
+            d3.select("#vis-svg").select("svg").remove();                   
+        }
+
+        function resizeCanvasSvg() {
+            svgWidth = svgContainer.parentElement.clientWidth - 20;
+            svgHeight = svgContainer.parentElement.clientHeight - 20;
+            clearSvg();
+            drawSvg();
+        }
+
+        function executeSvg() {
+            clearSvg();
+            svgData = getSvgData();
+            var renderStart = new Date().getTime();
+            drawSvg();
+            var elapsed = new Date().getTime() - renderStart;
+            var clickingText = document.getElementById("renderingTime-svg");
+            clickingText.innerText = '         Rendered in ' + elapsed / 1000 + 's';
+        }
+
+    </script>
+</body>
+</html>

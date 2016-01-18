@@ -1,0 +1,51 @@
+﻿body {
+    font-family: 'Segoe UI', sans-serif;
+}
+
+span {
+    font-style: italic;
+}
+
+canvas {
+    border: 1px solid #000;
+    position: absolute;
+    cursor: default;
+}
+
+.resize-drag, .resize-drag-svg, .resize-drag-d3 {
+    background-color: #29e;
+    color: white;
+    font-size: 20px;
+    font-family: sans-serif;
+    border-radius: 8px;
+    padding: 10px;
+    width: 420px;
+    height: 200px;
+    /* This makes things *much* easier */
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+.resize-container {
+    width: 100%;
+    height: 500px;
+}
+
+.canvas-container {
+    overflow: auto;
+    resize: both;
+    width: 500px;
+    height: 400px;
+    position: absolute;
+}
+
+.canvas-wrapper {
+    width: 1000px;
+    height: 375px;
+}
+
+.section {
+    width: 50%;
+    float: left;
+}

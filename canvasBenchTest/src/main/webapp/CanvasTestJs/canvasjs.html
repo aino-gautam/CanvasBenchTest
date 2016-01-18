@@ -1,0 +1,132 @@
+﻿<!DOCTYPE HTML>
+<html>
+
+<head>
+    <script type="text/javascript" src="/script/canvasjs.js"></script>
+    <script src="//cdn.jsdelivr.net/interact.js/1.2.6/interact.min.js"></script>
+    <link rel="stylesheet" href="app.css" type="text/css" />
+    <script type="text/javascript">
+        var dataPoints = [];
+        var bothAxisDataPoints = [];
+        var threeAxisDataPoints = [];
+        var y = 0;
+        var x = 0;
+        var limit = 1000;
+        var resizeOnMove = true;
+        var chartSelectedValue = "scatter";
+        var chartSelection;
+
+        var chartTypes = ["scatter", "line", "doughnut", "column", "area", "pie", "bubble"]
+
+
+        window.onload = function () {
+            storeOptions();
+            execute();
+        }
+
+        function storeOptions() {
+            chartSelection = document.getElementById('ChartType');
+            for (var i = 0; i < chartTypes.length; i++) {
+                var option = document.createElement("option");
+                option.text = chartTypes[i];
+                option.value = chartTypes[i];
+                chartSelection.add(option);
+            }
+        }
+
+        function execute() {
+            resizeOnMove = document.getElementById('resizeOnMove').checked;
+            limit = document.getElementById('numberOfElements').value;
+            chartSelectedValue = chartSelection.value;
+            dataPoints = [];
+            bothAxisDataPoints = [];
+            threeAxisDataPoints = [];
+            y = 0;
+            x = 0;
+
+            for (var i = 0; i < limit; i++) {
+                y += Math.round(10 + Math.random() * (-10 - 10));
+                dataPoints.push({ label: "apple" + i, y: y });
+                bothAxisDataPoints.push({ x: Math.random() * limit, y: Math.random() * limit });
+                threeAxisDataPoints.push({ x: Math.random() * limit, y: Math.random() * limit, z: Math.random() });
+            }
+            render();
+        }
+
+
+        interact('.resize-drag').draggable({ onmove: window.dragMoveListener }).resizable({
+            preserveAspectRatio: false,
+            edges: { left: true, right: true, bottom: true, top: true }
+        }).on('resizemove', function (event) {
+            var target = event.target,
+                x = (parseFloat(target.getAttribute('data-x')) || 0),
+                y = (parseFloat(target.getAttribute('data-y')) || 0);
+
+            // update the element's style
+            target.style.width = event.rect.width + 'px';
+            target.style.height = event.rect.height + 'px';
+
+
+
+            // translate when resizing from top or left edges
+            x += event.deltaRect.left;
+            y += event.deltaRect.top;
+
+            target.style.webkitTransform = target.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+
+            target.setAttribute('data-x', x);
+            target.setAttribute('data-y', y);
+
+            if (resizeOnMove) { render(); }
+        }).on('resizeend', function (event) {
+            if (!resizeOnMove) { render(); }
+        });
+
+        function render() {
+            var chart;
+            switch (chartSelectedValue) {
+                case "doughnut":
+                    chart = new CanvasJS.Chart("chartContainer", { animationEnabled: false, zoomEnabled: false, data: [{ type: "doughnut", dataPoints: dataPoints }] });
+                    break;
+                case "line":
+                    chart = new CanvasJS.Chart("chartContainer", { animationEnabled: false, zoomEnabled: false, data: [{ type: "line", dataPoints: dataPoints }] });
+                    break;
+                case "column":
+                    chart = new CanvasJS.Chart("chartContainer", { animationEnabled: false, zoomEnabled: false, data: [{ type: "column", dataPoints: bothAxisDataPoints }] });
+                    break;
+                case "area":
+                    chart = new CanvasJS.Chart("chartContainer", { animationEnabled: false, zoomEnabled: false, data: [{ type: "area", dataPoints: bothAxisDataPoints }] });
+                    break;
+                case "pie":
+                    chart = new CanvasJS.Chart("chartContainer", { animationEnabled: false, zoomEnabled: false, data: [{ type: "pie", dataPoints: bothAxisDataPoints }] });
+                    break;
+                case "scatter":
+                    chart = new CanvasJS.Chart("chartContainer", { animationEnabled: false, zoomEnabled: false, data: [{ type: "scatter", dataPoints: bothAxisDataPoints }] });
+                    break;
+                case "bubble":
+                    chart = new CanvasJS.Chart("chartContainer", { animationEnabled: false, zoomEnabled: false, data: [{ type: "bubble", dataPoints: threeAxisDataPoints }] });
+                    break;
+            }
+            chart.render();
+        }
+    </script>
+
+</head>
+<body>
+    <center><h1>Canvas.js Test</h1></center>
+    <div>
+        <input type="button" onclick="execute()" value="Execute" />
+        <select id="ChartType"></select>
+        <h2>Resize Canvas   <span><input type="radio" name="resize" value="onMove" id="resizeOnMove" checked />Move<input type="radio" name="resize" id="resizeOnEnd" value="onEnd" />End</span></h2>
+        <h2>Number Of Elements    <span><input type="number" value="1000" id="numberOfElements" /></span></h2>
+    </div>
+    <div>
+        <div class="resize-container">
+            <div class="resize-drag">
+                <div id="chartContainer" style="width: calc(100% - 10px); height: calc(100% - 10px);"></div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,175 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>D3 Example</title>
+    <meta charset="utf-8" />
+    <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+    <script src="//cdn.jsdelivr.net/interact.js/1.2.6/interact.min.js"></script>
+    <link rel="stylesheet" href="app.css" type="text/css" />
+</head>
+<body>
+    <div class="resize-container">
+        <div class="resize-drag">
+            <div id="vis"></div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        var myData;
+        var base = d3.select("#vis");
+        var container = document.getElementById("vis");
+        var width = container.parentElement.clientWidth - 20;
+        var height = container.parentElement.clientHeight - 20;
+
+        var chart = base.append("canvas")
+            .attr("width", width)
+            .attr("height", height);
+        var context = chart.node().getContext("2d");
+
+        // Create an in memory only element of type 'custom'
+        var detachedContainer = document.createElement("custom");
+
+        // Create a d3 selection for the detached container. We won't
+        // actually be attaching it to the DOM.
+        var dataContainer = d3.select(detachedContainer);
+        var dataBinding;
+        // Function to create our custom data containers
+        function drawCustom(data) {
+            var scaleX = d3.scale.linear()
+              .range([0, width])
+              .domain(d3.extent(data));
+
+            var scaleY = d3.scale.linear()
+              .range([0, height])
+              .domain(d3.extent(data));
+
+            dataBinding = dataContainer.selectAll("custom.rect")
+              .data(data, function (d) { return d; });
+
+            dataBinding.enter()
+                .append("custom")
+                .classed("rect", true)
+                .attr("x", scaleX)
+                .attr("y", () =>Math.random() * height)
+                .attr("size", 8);
+
+            //dataBinding.exit()
+            //  .attr("size", 8)
+            //  .attr("fillStyle", "red");
+        }
+
+        function drawCustomUpdate(data) {
+            var scaleX = d3.scale.linear()
+              .range([0, width])
+              .domain(d3.extent(data));
+
+            var scaleY = d3.scale.linear()
+              .range([0, height])
+              .domain(d3.extent(data));
+
+            dataBinding = dataContainer.selectAll("custom.rect")
+              .data(data, function (d) { return d; });
+
+            dataBinding.transition()
+                //.append("custom")
+                //.classed("rect", true)
+                .attr("x", scaleX)
+                .attr("y", () =>Math.random() * height)
+                .attr("size", 8);
+
+            //dataBinding.exit()
+            //  .attr("size", 8)
+            //  .attr("fillStyle", "red");
+        }
+
+        // Function to render out to canvas our custom
+        // in memory nodes
+        function drawCanvas() {
+
+            // clear canvas
+            context.fillStyle = "#fff";
+            context.rect(0, 0, chart.attr("width"), chart.attr("height"));
+            context.fill();
+
+            // select our dummy nodes and draw the data to canvas.
+            var elements = dataContainer.selectAll("custom.rect");
+            elements.each(function (d) {
+                var node = d3.select(this);
+
+                //context.beginPath();
+                //context.fillStyle = node.attr("fillStyle");
+                //context.rect(node.attr("x"), node.attr("y"), node.attr("size"), node.attr("size"));
+                //context.fill();
+                //context.closePath();
+                context.beginPath();
+                context.arc(node.attr("x"), node.attr("y"), node.attr("size"), 0, 2 * Math.PI, false);
+                context.fillStyle = 'green';
+                context.fill();
+                context.lineWidth = 2;
+                context.strokeStyle = '#003300';
+                context.stroke();
+                context.closePath();
+
+            })
+        }
+
+        function getData() {
+            myData = [];
+            for (var i = 0; i < 100; i++) {
+                //result.push({ x: (Math.random() * 100), y: (Math.random() * 100) });
+                myData.push(Math.random());
+            }
+            return myData;
+        }
+
+        function resize_canvas() {
+            width = container.parentElement.clientWidth - 20;
+            height = container.parentElement.clientHeight - 20;
+            //base.remove("canvas");
+            chart.attr("width", width)
+            .attr("height", height);
+            //drawCanvas();
+            context.clearRect(0, 0, width, height);
+            drawCustomUpdate(myData);
+        }
+
+        d3.timer(drawCanvas);
+        drawCustom(getData());
+
+
+        interact('.resize-drag').draggable({ onmove: window.dragMoveListener }).resizable({
+            preserveAspectRatio: false,
+            edges: { left: true, right: true, bottom: true, top: true }
+        }).on('resizestart', function (event) {
+            //resizeOnMove = document.getElementById('resizeOnMove').checked;
+        }).on('resizemove', function (event) {
+            var target = event.target,
+                x = (parseFloat(target.getAttribute('data-x')) || 0),
+                y = (parseFloat(target.getAttribute('data-y')) || 0);
+
+            // update the element's style
+            target.style.width = event.rect.width + 'px';
+            target.style.height = event.rect.height + 'px';
+
+            // translate when resizing from top or left edges
+            x += event.deltaRect.left;
+            y += event.deltaRect.top;
+
+            target.style.webkitTransform = target.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+
+            target.setAttribute('data-x', x);
+            target.setAttribute('data-y', y);
+
+            //if (resizeOnMove) {
+            //}
+        }).on('resizeend', function (event) {
+            //if (!resizeOnMove) {
+            //    resize_canvas();
+            //}
+            resize_canvas();
+        });
+    </script>
+</body>
+
+
+
+</html>
